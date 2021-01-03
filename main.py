@@ -40,7 +40,7 @@ class updateData(bluepy.btle.DefaultDelegate):
 class metricHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
-        self.send_header("Content-type", "text/html")
+        self.send_header("Content-type", "text/plain; version=0.0.4")
         self.end_headers()
         buffer = ""
         for point, value in dataPoints.items():
@@ -59,7 +59,7 @@ class metricServer(threading.Thread):
         logger(f"Server started at localhost:{config['global']['port']}")
         self.httpd.serve_forever()
     def stop(self):
-        self.httpd.server_close
+        self.httpd.server_close()
         logger("metricServer closed")
 
 
@@ -74,7 +74,7 @@ def main():
     scanner = bluepy.btle.Scanner().withDelegate(updateData())
     scanner.start()
     while True:
-        scanner.process(timeout = 3)
+        scanner.process(timeout = 0)
 
 
 def shutdownHandler(sig, frame):
