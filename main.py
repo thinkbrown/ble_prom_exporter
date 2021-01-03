@@ -5,9 +5,10 @@ import time
 import socketserver
 import http.server
 import threading
+import sys
 
 config = configparser.ConfigParser()
-config.read('ble_exporter.conf')
+config.read('/etc/ble_exporter.conf')
 dataPoints = {}
 
 
@@ -21,13 +22,9 @@ class updateData(bluepy.btle.DefaultDelegate):
             print(f"Received new data from {dev_name}")
             data = dev.getValueText(22)
             temperature = int(data[16:20], 16)/10
-            print(f"Temperature: {temperature}c ({temperature*9/5+32}f)")
             humidity = int(data[20:22], 16)
-            print(f"Humidity: {humidity}%")
             battery = int(data[22:24], 16)
-            print(f"Battery: {battery}%")
             battery_mv = int(data[24:28], 16)
-            print(f"{battery_mv} mV")
             dataPoints[dev.addr] = {'name': dev_name,
                               'temperature': temperature,
                               'humidity': humidity,
@@ -52,12 +49,12 @@ class metricHandler(http.server.SimpleHTTPRequestHandler):
 def runServer():
     global dataPoints
     with socketserver.TCPServer(("", int(config['global']['port'])), metricHandler) as httpd:
+        httpd.allow_reuse_address = True
         try:
             print(f"Server started at localhost:{config['global']['port']}")
             httpd.serve_forever()
-        except KeyboardInterrupt:
-            pass
-        httpd.server_close()
+        except:
+            httpd.server_close()
 
 daemon = threading.Thread(name="metricServer", target=runServer)
 daemon.setDaemon(True)
