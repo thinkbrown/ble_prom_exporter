@@ -1,0 +1,25 @@
+version: "3.3"
+services:
+  prometheus:
+    image: quay.io/prometheus/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - /data/prometheus.yml:/etc/prometheus/prometheus.yml
+      - /data/prom_data:/prometheus
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - /data/grafana_data:/var/lib/grafana
+  ble-exporter:
+    build: ..
+    ports:
+      - "8080:8080"
+    volumes:
+      - /data/ble_exporter.conf:/etc/ble_exporter.conf
+    network_mode: host
+    cap_add: 
+      - CAP_NET_RAW
+      - CAP_NET_ADMIN
