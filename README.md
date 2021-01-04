@@ -1,6 +1,8 @@
 # README
 
-This is a simple exporter for listening to bluetooth low energy beacons and exporting their reported temperature/humidity to Prometheus
+This is a simple exporter for listening to Xiamoi bluetooth low energy beacons running custom firmware and exporting their reported temperature/humidity to Prometheus.
+
+Big thanks to @atc1441 for his [custom firmware](https://github.com/atc1441/ATC_MiThermometer)
 
 ## Running
 
