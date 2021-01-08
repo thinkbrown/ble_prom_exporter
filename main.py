@@ -17,6 +17,9 @@ scanner = None
 def logger(message):
     print(f"[{datetime.datetime.now().ctime()}] {message}", flush=True)
 
+def signedInt(val):
+    return -(val & 0x8000) | (val & 0x7fff)
+
 class updateData(bluepy.btle.DefaultDelegate):
     def __init__(self):
         bluepy.btle.DefaultDelegate.__init__(self)
@@ -26,7 +29,7 @@ class updateData(bluepy.btle.DefaultDelegate):
             dev_name = config[dev.addr]['name']
             logger(f"Received new data from {dev_name}")
             data = dev.getValueText(22)
-            temperature = int(data[16:20], 16)/10
+            temperature = signedInt(int(data[16:20], 16))/10
             humidity = int(data[20:22], 16)
             battery = int(data[22:24], 16)
             battery_mv = int(data[24:28], 16)
@@ -34,7 +37,8 @@ class updateData(bluepy.btle.DefaultDelegate):
                               'temperature': temperature,
                               'humidity': humidity,
                               'battery': battery,
-                              'battery_mv': battery_mv}
+                              'battery_mv': battery_mv,
+                              'update_time': time.time()}
 
 
 class metricHandler(http.server.SimpleHTTPRequestHandler):
@@ -48,6 +52,7 @@ class metricHandler(http.server.SimpleHTTPRequestHandler):
             buffer += f"ble_humidity{{address=\"{point}\", name=\"{value['name']}\"}} {value['humidity']}\n"
             buffer += f"ble_battery_percent{{address=\"{point}\", name=\"{value['name']}\"}} {value['battery']}\n"
             buffer += f"ble_battery_millivolts{{address=\"{point}\", name=\"{value['name']}\"}} {value['battery_mv']}\n"
+            buffer += f"ble_data_age{{address=\"{point}\", name=\"{value['name']}\"}} {time.time() - value['update_time']}\n"
         self.wfile.write(bytes(buffer, "utf8"))
         return
 
